@@ -1,5 +1,9 @@
 # Spray Evaporation Lab
 
+> **Superseded (2026-10-18):** This derivative edition is retired in favor of the wholly original implementation [droplet-journey](https://github.com/khalil-official/droplet-journey). The repository stays public and read-only (archived); its history, credits, tests, and calendar records are preserved unchanged.
+
+
+
 <div align="center">
   <img src="docs/assets/reference_case.png" alt="Reference water-in-argon evaporation case" width="860">
 </div>
