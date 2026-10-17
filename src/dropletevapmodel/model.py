@@ -281,9 +281,14 @@ class EvapModel():
             # Check if the result is complex
             for k, v in res[t].items():
                 if isinstance(v, complex):
-                    logger.warning(f"Found complex res for {k} variable at iteration {t} and timestamp {t*self.model['modelling']['timestep']}")
-            # Break if the droplet diameter is negative or zero
-            if res[t]['d_d'] <= 0 or res[t]['d_d'] == np.nan or res[t]['t_d'] <= 0:
+                    logger.warning(f"Found complex res for {k} variable at iteration {t} and timestamp {t*timestep}")
+            # Break if the droplet diameter or temperature left the valid range
+            # or became non-finite (NaN compares false against everything, so
+            # the range checks alone cannot catch diverged states).
+            d_now = res[t]['d_d']
+            t_now = res[t]['t_d']
+            if (not np.isfinite(d_now) or not np.isfinite(t_now)
+                    or d_now <= 0 or t_now <= 0):
                 logger.info(f'Estimated evaporation time of {t*timestep} seconds')
                 break
             # Max iteration reached
