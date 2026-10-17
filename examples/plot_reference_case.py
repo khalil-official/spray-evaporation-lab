@@ -1,9 +1,12 @@
 """Run the reference water-in-argon case and render the README figure.
 
-Produces ``docs/assets/reference_case.png``: the d^2 evaporation history with
-the accumulating vapour content, and the droplet heating transient. The final
-stored state is the one that triggers the run's stop condition and is excluded
-from the plots. Run from the repository root:
+Produces ``docs/assets/reference_case.png``: the computed evaporation
+history (squared diameter and vapour content) and the droplet temperature
+transient. The final stored state is the one that triggers the run's stop
+condition (a numerical termination, not a validated physical lifetime) and is
+excluded from the plots; the stop time is marked explicitly. Late-time
+fixed-step oscillations are visible in the data and are annotated rather than
+smoothed away. Run from the repository root:
 
     python examples/plot_reference_case.py
 """
@@ -27,7 +30,9 @@ def main():
         ROOT / 'configs' / 'liq.csv', index_col='property')['H2O'].to_dict()
 
     result = EvapModel(DropletEvapModel(**config)).run()
-    steps = sorted(result)[:-1]          # drop the stop-triggering terminal state
+    all_steps = sorted(result)
+    terminal_time = result[all_steps[-1]]['time']
+    steps = all_steps[:-1]        # drop the stop-triggering terminal state
 
     time = np.array([result[t]['time'] for t in steps])
     d_square = np.array([result[t]['d_d'] for t in steps]) ** 2 * 1e12   # um^2
@@ -40,16 +45,21 @@ def main():
     ax[0].set_xlabel('Time (s)')
     ax[0].set_ylabel(r'Squared diameter $d^2$ ($\mu m^2$)', color='#0b6e4f')
     ax[0].tick_params(axis='y', labelcolor='#0b6e4f')
-    ax[0].set_title(r'$d^2$-law evaporation: water droplet in argon')
+    ax[0].set_title('Computed evaporation history: water droplet in argon')
     ax0b = ax[0].twinx()
     ax0b.plot(time, ppm, lw=1.4, ls='--', color='#b3541e')
     ax0b.set_ylabel('Vapour content (ppm)', color='#b3541e')
     ax0b.tick_params(axis='y', labelcolor='#b3541e')
+    ax[0].axvline(terminal_time, color='#777777', lw=1.0, ls=':')
+    ax[0].annotate(f'numerical termination\n$t \\approx {terminal_time:.4f}$ s\n(stop condition; terminal\nstate not physical)',
+                   xy=(terminal_time, d_square[-1]), xytext=(0.58, 0.42),
+                   textcoords='axes fraction', fontsize=8, color='#555555',
+                   arrowprops=dict(arrowstyle='->', color='#777777', lw=0.8))
 
     ax[1].plot(time, t_drop, lw=2.2, color='#1f4e79')
     ax[1].set_xlabel('Time (s)')
     ax[1].set_ylabel('Droplet temperature (K)')
-    ax[1].set_title('Droplet heating transient')
+    ax[1].set_title('Droplet temperature (fixed-step run;\nlate-time oscillations are numerical)')
 
     for axis in ax:
         axis.spines['top'].set_visible(False)
@@ -59,7 +69,7 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=160)
     print(f'Saved {out} ({len(steps)} accepted states, '
-          f'final time {time[-1]:.5f} s)')
+          f'numerical termination at {terminal_time:.5f} s)')
 
 
 if __name__ == '__main__':

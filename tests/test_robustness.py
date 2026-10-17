@@ -121,7 +121,10 @@ class TestPhysicalInvariants(unittest.TestCase):
             self.assertGreater(t_d, 0.0)
             self.assertLess(t_d, boiling_t)
 
-    def test_evaporation_time_regression(self):
+    def test_termination_time_matches_upstream_regression(self):
+        # Anchors the numerics to the upstream implementation: this is a
+        # numerical termination time (a stop-condition event), NOT a
+        # validated physical evaporation lifetime.
         steps = sorted(self.result)
         final_time = self.result[steps[-1]]['time']
         self.assertAlmostEqual(final_time, 0.9992800, delta=1e-6)

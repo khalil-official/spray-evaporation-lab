@@ -5,9 +5,12 @@
 </div>
 
 <p align="center"><sub>Reference case computed by <code>examples/plot_reference_case.py</code>:
-d²-law collapse of a 23 µm water droplet evaporating in argon at 1 atm, 293 K
-(49,964 accepted states, evaporation time ≈ 0.9993 s), with the accumulating
-vapour content and the droplet heating transient.</sub></p>
+computed evaporation history of a 23 µm water droplet in argon at 1 atm, 293 K
+(49,964 accepted states). The run terminates numerically at ≈ 0.9993 s when a
+state leaves the physical range — this is a stop-condition event, not a
+validated physical lifetime. The terminal state is excluded from the plot and
+the stop is marked; visible late-time oscillations are numerical (fixed-step
+integration), not measured physics.</sub></p>
 
 **A 0-D single-droplet evaporation model for spray analysis.** This is a
 development edition of
@@ -60,9 +63,11 @@ Two robustness defects in `EvapModel.run()` are fixed, with regression tests:
 - **New tests (`tests/test_robustness.py`, 8 cases).** Guard behavior for
   NaN/inf states and complex-value logging; physical invariants of the
   reference case (overall d² collapse, humidity rise, droplet temperature
-  within physical bounds); and the lifetime regression — evaporation time
-  0.99928 s, matching the upstream test anchor bit-for-bit, confirming the
-  fixes leave the numerics untouched.
+  within physical bounds); and a termination-time regression — the run stops
+  at 0.99928 s, matching the upstream implementation exactly, confirming the
+  fixes leave the numerics untouched. Matching upstream is a numerical
+  regression, not independent physical validation. The guard checks diameter
+  and temperature only; it does not repair the underlying integration.
 - `examples/plot_reference_case.py` renders the README figure from the
   reference case.
 
@@ -70,14 +75,19 @@ Two robustness defects in `EvapModel.run()` are fixed, with regression tests:
 
 - 0-D, single droplet, well-stirred gas at fixed temperature; no spray
   interactions, no atomization, no multicomponent droplets.
-- Near end-of-life the fixed-timestep integration enters a condensation/evaporation
-  flutter: the accepted states stay physical, but the terminal stored state
-  is the one that trips the stop condition (e.g. a temperature collapse) and
-  lies outside the physical range. Plot code drops it.
+- The reported end time is a **numerical termination** (a state left the
+  physical range and tripped the stop condition), not a validated physical
+  evaporation lifetime. The terminal state itself is non-physical and is
+  excluded from plots; the reference YAML also varies humidity and droplet
+  temperature, so the d² history is not a demonstration of the classical
+  constant-condition d² law.
+- Late-time integration with the fixed upstream timestep oscillates
+  (evaporation/condensation flutter); those oscillations are numerical, kept
+  visible in the results figure, and are not repaired by this edition's guard.
 - Liquid density is constant (upstream TODO); several coefficient fits carry
   their own validity ranges; `G` correction factor code retained as upstream.
-- Physics verified by invariants and one lifetime regression, not against
-  new experimental data.
+- Physics verified by invariants and one upstream-matching numerical
+  regression, not against new experimental data.
 
 ## Upstream source and credits
 
